@@ -7,10 +7,8 @@ def get_conversation(env, page=1, limit=10, last_document=None):
         return {"error": "Invalid environment"}, 400
 
     try:
-        # Get the appropriate message model based on the environment
         message_model = get_message_model(env)
 
-        # Retrieve messages with pagination
         if page == 1:
             messages = (
                 message_model.collection
@@ -30,7 +28,6 @@ def get_conversation(env, page=1, limit=10, last_document=None):
                 .fetch()
             )
 
-        # Convert the messages to a list of dictionaries for JSON serialization
         messages_data = [{"id": msg.id, **msg.to_dict()} for msg in messages]
 
         return {
@@ -49,7 +46,6 @@ def delete_conversation(env):
         return {"error": "Invalid environment"}, 400
 
     try:
-        # Get the appropriate message model based on the environment
         message_model = get_message_model(env)
 
         message_model.collection.delete_every()
@@ -70,7 +66,6 @@ def send_message(env, user, data):
         if message_type not in ['image', 'audio', 'text']:
             return {"error": "Invalid message type"}, 400
 
-        # Create a new message based on the environment and user type
         message_model = get_message_model(env)
         new_message = message_model()
         new_message.user = user
@@ -85,7 +80,6 @@ def send_message(env, user, data):
         return {"error": str(e)}, 500
 
 def get_message_model(env):
-    # Return the appropriate FireO model based on the environment
     if env == 'prod':
         return ProdMessage
     elif env == 'dev':
