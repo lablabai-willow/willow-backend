@@ -1,0 +1,4 @@
+__pycache__/
+willow-flask/
+
+serviceAccountKey.json
