@@ -1,6 +1,13 @@
-from flask import jsonify, request
 from datetime import datetime
+from google.cloud import storage
 from models.message_model import DevMessages, ProdMessages
+import tempfile
+import uuid
+
+TEXT = "text"
+SUPPORTED_FILE_TYPES = ["audio", "image"]
+BUCKET_NAME = "willow-conversation-assets"
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 def get_conversation(env, page=1, limit=10, last_document=None):
     if env not in ['dev', 'prod']:
@@ -55,29 +62,51 @@ def delete_conversation(env):
     except Exception as e:
         return {"error": str(e)}, 500
 
-def send_message(env, user, data):
-    if env not in ['dev', 'prod'] or user not in ['ai_coach', 'end_user']:
-        return {"error": "Invalid environment or user"}, 400
+def send_message(env, user, body, request_files):
+    if not env or not user or not body:
+      return { "statusText": "missing either env, user, or body data"}, 400
 
-    try:
-        message_type = data.get('message_type')
-        content = data.get('content')
+    # grab body attributes
+    content_type = body.get("type")
+    created_at_string = body.get("createdAt")
 
-        if message_type not in ['image', 'audio', 'text']:
-            return {"error": "Invalid message type"}, 400
+    # initialize dict of values we will write to firestore
+    doc_id = uuid.uuid4()
+    message_model = get_message_model(env)
+    new_message = message_model()
+    new_message.user = user
+    new_message.type = content_type
+    new_message.created_at = datetime.strptime(created_at_string, DATETIME_FORMAT)
 
-        message_model = get_message_model(env)
-        new_message = message_model()
-        new_message.user = user
-        new_message.message_type = message_type
-        new_message.content = content
-        new_message.created_at = datetime.now()
-        new_message.save()
+    # build object_to_store with content or content_id depending on file_type
+    if content_type in SUPPORTED_FILE_TYPES:
+        new_message.content_id = f'{uuid.uuid4()}'
+    elif content_type == "text":
+        new_message.content = body.get("content")
+    else:
+        return { "statusText": "incorrect file type", content_type: content_type }, 400
 
-        return {"status": "Message saved successfully"}, 200
+    # write to db
+    new_message.save()
 
-    except Exception as e:
-        return {"error": str(e)}, 500
+    return { "statusText": "successfully registered message", "contentId": new_message.content_id }, 200
+
+
+def send_file(content_id, request_files):
+    if 'file' not in request_files or not request_files['file']:
+        print({"requestFiles": request_files.keys()})
+        return { "statusText": "missing file" }, 400
+
+    content_file = request_files['file']
+
+    with tempfile.NamedTemporaryFile() as temp_file:
+        content_file.save(temp_file.name)
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket(BUCKET_NAME)
+        blob = bucket.blob(content_id)
+        blob.upload_from_filename(temp_file.name)
+    
+    return { "statusText": f"successfully uploaded file {content_id}" }, 200
 
 def get_message_model(env):
     if env == 'prod':

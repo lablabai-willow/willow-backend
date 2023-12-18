@@ -1,7 +1,7 @@
 # routes.py
 
 from flask import Blueprint, jsonify, request
-from controllers.message_controller import get_conversation, delete_conversation, send_message
+from controllers.message_controller import get_conversation, delete_conversation, send_message, send_file
 
 controller = Blueprint('controller', __name__)
 
@@ -33,9 +33,24 @@ def delete_conversation_route():
 def send_message_route():
     env = request.args.get('env')
     user = request.args.get('user')
-
     data = request.get_json()
+    files = request.files
 
-    result, status_code = send_message(env, user, data)
+    try:
+        result, status_code = send_message(env, user, data, files)
+        return jsonify(result), status_code
+    except Exception as e:
+        print(e)
+        return jsonify({ "statusText": "error uploading message" }), 500
 
-    return jsonify(result), status_code
+
+@controller.route('/api/sendFile', methods=['POST'])
+def send_file_route():
+    content_id = request.args.get('contentId')
+    files = request.files
+    try:
+        result, status_code = send_file(content_id, files)
+        return jsonify(result), status_code
+    except Exception as e:
+        print(e)
+        return jsonify({ "statusText": "error processing file", "content_id": content_id}), 500
