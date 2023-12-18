@@ -1,16 +1,16 @@
 from fireo.fields import TextField, DateTime
 from fireo.models import Model
 
-class ProdMessage(Model):
+class ProdMessages(Model):
     user = TextField()
-    message_type = TextField()
+    type = TextField()
     content = TextField()
-    # content_id = TextField(column_name="contentId")
-    created_at = DateTime()
+    content_id = TextField(column_name="contentId")
+    created_at = DateTime(column_name="createdAt")
 
-class DevMessage(Model):
+class DevMessages(Model):
     user = TextField()
-    message_type = TextField()
+    type = TextField()
     content = TextField()
-    # content_id = TextField(column_name="contentId")
-    created_at = DateTime()
+    content_id = TextField(column_name="contentId")
+    created_at = DateTime(column_name="createdAt")

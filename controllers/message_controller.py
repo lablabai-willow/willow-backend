@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from datetime import datetime
-from models.message_model import DevMessage, ProdMessage
+from models.message_model import DevMessages, ProdMessages
 
 def get_conversation(env, page=1, limit=10, last_document=None):
     if env not in ['dev', 'prod']:
@@ -81,6 +81,6 @@ def send_message(env, user, data):
 
 def get_message_model(env):
     if env == 'prod':
-        return ProdMessage
+        return ProdMessages
     elif env == 'dev':
-        return DevMessage
+        return DevMessages
