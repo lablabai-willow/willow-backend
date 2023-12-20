@@ -4,7 +4,6 @@ import fireo
 import os
 
 app = Flask(__name__)
-
 # Set up environment variables
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "serviceAccountKey.json"
 

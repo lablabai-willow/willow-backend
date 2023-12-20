@@ -1,5 +1,6 @@
 from datetime import datetime
 from google.cloud import storage
+from agent.agent_setup import agent_setup
 from models.message_model import DevMessages, ProdMessages
 import tempfile
 import uuid
@@ -8,6 +9,9 @@ TEXT = "text"
 SUPPORTED_FILE_TYPES = ["audio", "image"]
 BUCKET_NAME = "willow-conversation-assets"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+global agent
+agent = agent_setup()
 
 def get_conversation(env, page=1, limit=10, last_document=None):
     if env not in ['dev', 'prod']:
@@ -107,6 +111,28 @@ def send_file(content_id, request_files):
         blob.upload_from_filename(temp_file.name)
     
     return { "statusText": f"successfully uploaded file {content_id}" }, 200
+
+def get_agent_response(env,body):
+    if not env or not body:
+      return { "statusText": "missing either env, or message data"}, 400
+    try:
+        agent_response = agent.chat(body.get("content"))
+
+        message_model = get_message_model(env)
+        new_message = message_model()
+        new_message.user = "ai_coach"
+        new_message.type = "text"
+        created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        new_message.created_at = datetime.strptime(created_at, DATETIME_FORMAT)
+        new_message.content = agent_response.response
+        new_message.save()
+
+        return {
+            "status": "Successfully retrieved agent reply",
+            "message": agent_response.response
+        }, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 def get_message_model(env):
     if env == 'prod':
