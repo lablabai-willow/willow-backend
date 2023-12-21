@@ -1,9 +1,13 @@
 from flask import Flask
+from flask_cors import CORS
 from routes.message_route import controller
 import fireo
 import os
 
+
 app = Flask(__name__)
+CORS(app, resources={ "api/*": { "origins": "http://localhost:5713"}})
+
 # Set up environment variables
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "serviceAccountKey.json"
 

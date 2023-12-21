@@ -1,6 +1,7 @@
 # routes.py
 
 from flask import Blueprint, jsonify, request
+from flask_cors import cross_origin
 from controllers.message_controller import get_agent_response, get_conversation, delete_conversation, send_message, send_file
 
 controller = Blueprint('controller', __name__)
@@ -8,6 +9,7 @@ controller = Blueprint('controller', __name__)
 
 
 @controller.route('/', methods=['GET'])
+@cross_origin()
 def hello_world():
     #return hello world in json
     return jsonify({"message": "Hello, World!"}), 200
@@ -24,6 +26,7 @@ def get_conversation_route():
     return jsonify(result), status_code
 
 @controller.route('/api/conversation', methods=['DELETE'])
+@cross_origin()
 def delete_conversation_route():
     env = request.args.get('env')
 
@@ -32,6 +35,7 @@ def delete_conversation_route():
     return jsonify(result), status_code
 
 @controller.route('/api/sendMessage', methods=['POST'])
+@cross_origin()
 def send_message_route():
     env = request.args.get('env')
     user = request.args.get('user')
@@ -46,6 +50,7 @@ def send_message_route():
         return jsonify({ "statusText": "error uploading message" }), 500
     
 @controller.route('/api/sendFile', methods=['POST'])
+@cross_origin()
 def send_file_route():
     content_id = request.args.get('contentId')
     files = request.files
@@ -57,6 +62,7 @@ def send_file_route():
         return jsonify({ "statusText": "error processing file", "content_id": content_id}), 500
     
 @controller.route('/api/getAgentResponse', methods=['POST'])
+@cross_origin()
 def get_agent_response_route():
     env = request.args.get('env')
     data = request.get_json()
