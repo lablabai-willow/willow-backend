@@ -5,12 +5,10 @@ class ProdMessages(Model):
     user = TextField()
     type = TextField()
     content = TextField()
-    content_id = TextField(column_name="contentId")
     created_at = DateTime()
 
 class DevMessages(Model):
     user = TextField()
     type = TextField()
     content = TextField()
-    content_id = TextField(column_name="contentId")
     created_at = DateTime()

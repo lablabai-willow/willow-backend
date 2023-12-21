@@ -44,18 +44,6 @@ def send_message_route():
     except Exception as e:
         print(e)
         return jsonify({ "statusText": "error uploading message" }), 500
-
-@controller.route('/api/getAgentResponse', methods=['POST'])
-def get_agent_response_route():
-    env = request.args.get('env')
-    data = request.get_json()
-
-    try:
-        result, status_code = get_agent_response(env, data)
-        return jsonify(result), status_code
-    except Exception as e:
-        print(e)
-        return jsonify({ "statusText": "error recieving message" }), 500
     
 @controller.route('/api/sendFile', methods=['POST'])
 def send_file_route():
@@ -67,3 +55,15 @@ def send_file_route():
     except Exception as e:
         print(e)
         return jsonify({ "statusText": "error processing file", "content_id": content_id}), 500
+    
+@controller.route('/api/getAgentResponse', methods=['POST'])
+def get_agent_response_route():
+    env = request.args.get('env')
+    data = request.get_json()
+
+    try:
+        result, status_code = get_agent_response(env, data)
+        return jsonify(result), status_code
+    except Exception as e:
+        print(e)
+        return jsonify({ "statusText": "error recieving message" }), 500
