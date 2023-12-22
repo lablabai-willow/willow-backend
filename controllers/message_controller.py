@@ -5,6 +5,10 @@ from agent.agent_setup import agent_setup
 from models.message_model import DevMessages, ProdMessages
 import tempfile
 import uuid
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 SUPPORTED_MESSAGE_TYPES = ["audio", "image", "text"]
 SUPPORTED_ENVIRONMENTS = ["dev", "prod"]
@@ -13,7 +17,7 @@ BUCKET_NAME = "willow-conversation-assets"
 DATETIME_FORMAT = "'%Y-%m-%dT%H:%M:%S.%f%z'"
 
 global agent
-agent = agent_setup(simple_prompt=True)
+agent = agent_setup(os.environ.get("SIMPLE_PROMPT"))
 
 def get_conversation(env, page=1, limit=10, last_document=None):
     if env not in SUPPORTED_ENVIRONMENTS:

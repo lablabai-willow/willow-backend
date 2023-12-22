@@ -26,9 +26,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CHALLENGING_CHILD_TOOLBOX = "https://storage.cloud.google.com/willow-training-data/Mitch_Abblett_-_The_Challenging_Child_Toolbox___75_Mindfulness-Based_Practices_Tools_and_Tips_for_Therapists-PESI_2018.pdf"
-MINDFULNESS_TOOLBOX_ANXIETY = "https://storage.cloud.google.com/willow-training-data/Donald_Altman_-_The_Mindfulness_Toolbox__50_Practical_Tips_Tools__Handouts_for_Anxiety_Depression_Stress__Pain-PESI_Publishing__Media_2014.pdf"
-MINDFULNESS_TOOLBOX_RELATIONSHIPS = "https://storage.cloud.google.com/willow-training-data/Donald_Altman_-_The_Mindfulness_Toolbox_for_Relationships__50_Practical_Tips_Tools__Handouts_for_Building_Compassionate_Connections-PESI_Publishing__Media_2018.pdf"
+
+CHALLENGING_CHILD_TOOLBOX_EMBEDDING = os.environ.get("CHALLENGING_CHILD_TOOLBOX_EMBEDDING")
+MINDFULNESS_TOOLBOX_ANXIETY_EMBEDDING = os.environ.get("MINDFULNESS_TOOLBOX_ANXIETY_EMBEDDING")
+MINDFULNESS_TOOLBOX_RELATIONSHIPS_EMBEDDING = os.environ.get("MINDFULNESS_TOOLBOX_RELATIONSHIPS_EMBEDDING")
+
+CHALLENGING_CHILD_TOOLBOX = os.environ.get("CHALLENGING_CHILD_TOOLBOX")
+MINDFULNESS_TOOLBOX_ANXIETY = os.environ.get("MINDFULNESS_TOOLBOX_ANXIETY")
+MINDFULNESS_TOOLBOX_RELATIONSHIPS = os.environ.get("MINDFULNESS_TOOLBOX_RELATIONSHIPS")
 
 def load_data_from_url(url):
     response = requests.get(url)
@@ -44,9 +49,7 @@ def process_url_with_reader(url):
 
 def agent_setup(simple_prompt=False):
     global agent
-    # openai.api_key = os.environ.get("OPENAI_API_KEY")
-    openai.api_key = "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"
-    print("########SDFSDFSDFFDS", openai.api_key)
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, force=True)
     logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
@@ -55,17 +58,17 @@ def agent_setup(simple_prompt=False):
     # Attempt to load embeddings
     try:
         storage_context = StorageContext.from_defaults(
-            persist_dir=CHALLENGING_CHILD_TOOLBOX
+            persist_dir=CHALLENGING_CHILD_TOOLBOX_EMBEDDING
         )
         challenging_child_index = load_index_from_storage(storage_context)
 
         storage_context = StorageContext.from_defaults(
-            persist_dir=MINDFULNESS_TOOLBOX_ANXIETY
+            persist_dir=MINDFULNESS_TOOLBOX_ANXIETY_EMBEDDING
         )
         mindfulness_TB_50_index = load_index_from_storage(storage_context)
 
         storage_context = StorageContext.from_defaults(
-            persist_dir=MINDFULNESS_TOOLBOX_RELATIONSHIPS
+            persist_dir=MINDFULNESS_TOOLBOX_RELATIONSHIPS_EMBEDDING
         )
         mindfulness_TB_relationships_index = load_index_from_storage(storage_context)
     except:
@@ -81,7 +84,7 @@ def agent_setup(simple_prompt=False):
         mindfulness_TB_relationships_index = VectorStoreIndex.from_documents(mindfulness_TB_relationships_docs)
 
         # Persist
-        challenging_child_index.storage_context.persist(persist_dir="./agent/storage/challenging_child")
+        challenging_child_index.storage_context.persist(persist_dir="./agent/storage/mindfulness_TB_50")
         mindfulness_TB_50_index.storage_context.persist("./agent/storage/mindfulness_TB_50")
         mindfulness_TB_relationships_index.storage_context.persist(persist_dir="./agent/storage/mindfulness_TB_relationships")
 
