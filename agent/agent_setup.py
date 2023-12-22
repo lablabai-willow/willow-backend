@@ -3,8 +3,10 @@
 import os
 import openai
 import logging
+import requests
 import sys
 import json
+import tempfile
 from llama_index.tools import BaseTool, FunctionTool
 from llama_index.multi_modal_llms.gemini import GeminiMultiModal
 from llama_index.multi_modal_llms.generic_utils import load_image_urls
@@ -24,9 +26,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def agent_setup(simple_prompt = False):
+CHALLENGING_CHILD_TOOLBOX = "https://storage.cloud.google.com/willow-training-data/Mitch_Abblett_-_The_Challenging_Child_Toolbox___75_Mindfulness-Based_Practices_Tools_and_Tips_for_Therapists-PESI_2018.pdf"
+MINDFULNESS_TOOLBOX_ANXIETY = "https://storage.cloud.google.com/willow-training-data/Donald_Altman_-_The_Mindfulness_Toolbox__50_Practical_Tips_Tools__Handouts_for_Anxiety_Depression_Stress__Pain-PESI_Publishing__Media_2014.pdf"
+MINDFULNESS_TOOLBOX_RELATIONSHIPS = "https://storage.cloud.google.com/willow-training-data/Donald_Altman_-_The_Mindfulness_Toolbox_for_Relationships__50_Practical_Tips_Tools__Handouts_for_Building_Compassionate_Connections-PESI_Publishing__Media_2018.pdf"
+
+def load_data_from_url(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.content
+
+def process_url_with_reader(url):
+    data = load_data_from_url(url)
+    with tempfile.NamedTemporaryFile(mode='wb', delete=False) as tmp_file:
+        tmp_file.write(data)
+        tmp_file_path = tmp_file.name
+    return SimpleDirectoryReader(input_files=[tmp_file_path]).load_data(show_progress=True)
+
+def agent_setup(simple_prompt=False):
     global agent
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    # openai.api_key = os.environ.get("OPENAI_API_KEY")
+    openai.api_key = "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"
+    print("########SDFSDFSDFFDS", openai.api_key)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, force=True)
     logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
@@ -35,30 +55,25 @@ def agent_setup(simple_prompt = False):
     # Attempt to load embeddings
     try:
         storage_context = StorageContext.from_defaults(
-            persist_dir="./agent/storage/challenging_child"
+            persist_dir=CHALLENGING_CHILD_TOOLBOX
         )
         challenging_child_index = load_index_from_storage(storage_context)
 
         storage_context = StorageContext.from_defaults(
-            persist_dir="./agent/storage/mindfulness_TB_50"
+            persist_dir=MINDFULNESS_TOOLBOX_ANXIETY
         )
         mindfulness_TB_50_index = load_index_from_storage(storage_context)
 
         storage_context = StorageContext.from_defaults(
-            persist_dir="./agent/storage/mindfulness_TB_relationships"
+            persist_dir=MINDFULNESS_TOOLBOX_RELATIONSHIPS
         )
         mindfulness_TB_relationships_index = load_index_from_storage(storage_context)
     except:
         # Need to generate embeddings
-        challenging_child_docs = SimpleDirectoryReader(
-            input_files=["./agent/data/The_Challenging_Child_Toolbox.pdf"]
-        ).load_data(show_progress=True)
-        mindfulness_TB_50_docs = SimpleDirectoryReader(
-            input_files=["./agent/data/The_Mindfulness_Toolbox__50_Practical_Tips_Tools.pdf"]
-        ).load_data(show_progress=True)
-        mindfulness_TB_relationships_docs = SimpleDirectoryReader(
-            input_files=["./agent/data/The_Mindfulness_Toolbox_for_Relationships.pdf"]
-        ).load_data(show_progress=True)
+        print("GENERATING EMBEDDINGS........")
+        challenging_child_docs = process_url_with_reader(CHALLENGING_CHILD_TOOLBOX)
+        mindfulness_TB_50_docs = process_url_with_reader(MINDFULNESS_TOOLBOX_ANXIETY)
+        mindfulness_TB_relationships_docs = process_url_with_reader(MINDFULNESS_TOOLBOX_RELATIONSHIPS)
 
         # Build index
         challenging_child_index = VectorStoreIndex.from_documents(challenging_child_docs)
@@ -254,8 +269,8 @@ def agent_setup(simple_prompt = False):
         
         10) Then, offer 10 different affirmations
         
-        11) Finally, offer a mindfulness exercise based on the conversation, tailer it to the user's needs, maintaining a comprehensive and supportive approach.
-        
+        11) Finally, offer a mindfulness exercise based on the conversation, tailor it to the user's needs and send a link of the meditation, maintaining a comprehensive and supportive approach.
+
         12) Once the user has let out their steam, see if they want to continue to chat. If they want to chat about other things that isn't related to getting emotional support, listen empathetically or chat as if you are their best friend. Don't focus on giving advice but focus on listening, sharing and giving empathetic response.
     """
 

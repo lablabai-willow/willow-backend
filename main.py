@@ -6,7 +6,7 @@ import os
 
 
 app = Flask(__name__)
-CORS(app, resources={ "api/*": { "origins": "http://localhost:5713"}})
+CORS(app, resources={ r"/api/*": { "origins": "*"}})
 
 # Set up environment variables
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "serviceAccountKey.json"
