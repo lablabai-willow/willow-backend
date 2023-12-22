@@ -121,7 +121,6 @@ def send_file(content_id, env, request_files):
 
     content_file = request_files['file']
 
-    print("WE MADE IT HERE AT LEAST")
     with tempfile.NamedTemporaryFile() as temp_file:
         content_file.save(temp_file.name)
         storage_client = storage.Client()
@@ -142,7 +141,6 @@ def get_agent_response(env,body):
       return { "status": "missing either env, or message data"}, 400
     try:
         agent_response = agent.chat(body.get("content"))
-        print(body.get("content"))
 
         message_model = get_message_model(env)
         new_message = message_model()
